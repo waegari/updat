@@ -2,6 +2,7 @@ library updat;
 
 import 'dart:io';
 
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:updat/theme/chips/default.dart';
@@ -151,7 +152,8 @@ class _UpdatWidgetState extends State<UpdatWidget> {
           this.latestVersion = Version.parse(latestVersion);
           if (this.latestVersion! > appVersion) {
             if (widget.getChangelog != null) {
-              widget.getChangelog!(latestVersion, widget.currentVersion).then((changelogRec) {
+              widget.getChangelog!(latestVersion, widget.currentVersion)
+                  .then((changelogRec) {
                 if (changelogRec != null && mounted) {
                   setState(() {
                     status = UpdatStatus.availableWithChangelog;
@@ -219,7 +221,8 @@ class _UpdatWidgetState extends State<UpdatWidget> {
   }
 
   void startUpdate() async {
-    if (status != UpdatStatus.available && status != UpdatStatus.availableWithChangelog) {
+    if (status != UpdatStatus.available &&
+        status != UpdatStatus.availableWithChangelog) {
       if (status == UpdatStatus.readyToInstall) {
         launchInstaller();
       }
@@ -233,7 +236,8 @@ class _UpdatWidgetState extends State<UpdatWidget> {
 
     // Get the file location to download the file to.
     if (widget.getDownloadFileLocation != null) {
-      installerFile = await widget.getDownloadFileLocation!(latestVersion!.toString());
+      installerFile =
+          await widget.getDownloadFileLocation!(latestVersion!.toString());
     } else {
       installerFile = await getDownloadFileLocation(
         latestVersion!.toString(),
@@ -263,13 +267,20 @@ class _UpdatWidgetState extends State<UpdatWidget> {
   }
 
   Future<void> launchInstaller() async {
-    if (status != UpdatStatus.readyToInstall && status != UpdatStatus.dismissed) {
+    if (status != UpdatStatus.readyToInstall &&
+        status != UpdatStatus.dismissed) {
       return;
     }
     // Open the file.
     try {
       await openInstaller(installerFile!, widget.appName);
-      if (widget.closeOnInstall) exit(0);
+      if (widget.closeOnInstall) {
+        if (Platform.isWindows) {
+          appWindow.close();
+        } else {
+          exit(0);
+        }
+      }
     } catch (e) {
       setState(() {
         status = UpdatStatus.error;
